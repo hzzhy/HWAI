@@ -1,0 +1,90 @@
+#include<queue>
+#include<cmath>
+#include<iostream>
+#define left 1
+#define right 0
+using namespace std;
+int m, n;
+bool state_tree[4000][4000][2] = {};
+struct goal
+{
+	int steps, Lm, Rm, Lc, Rc;
+	bool boat_side;
+	goal(int M, int C, bool Boat = left, int step = 0) :Lm(M), Rm(m - M), Lc(C), Rc(m - C), boat_side(Boat), steps(step) {}
+	goal moving(int boat_m, int boat_c)
+	{
+		goal result = *this;
+		if (boat_side == left)
+		{
+			result.Lm -= boat_m; result.Lc -= boat_c;
+			result.Rm += boat_m; result.Rc += boat_c;
+		}
+		else
+		{
+			result.Lm += boat_m; result.Lc += boat_c;
+			result.Rm -= boat_m; result.Rc -= boat_c;
+		}
+		if (result.boat_side == left)
+			result.boat_side = right;
+		else
+			result.boat_side = left;
+		result.steps++;
+		state_tree[result.Lm][result.Lc][result.boat_side] = true;
+		return result;
+	}
+	bool judge(int boat_m, int boat_c)
+	{
+		if (boat_m >= boat_c || boat_m == 0)
+		{
+			if (boat_side == left)
+			{
+				return(((Lm - boat_m >= 0) && (Lc - boat_c >= 0) && Lm - boat_m >= Lc - boat_c || Lm - boat_m == 0) && (Rm + boat_m >= Rc + boat_c || Rm + boat_m == 0) && !state_tree[Lm - boat_m][Lc - boat_c][!boat_side]);
+			}
+			else
+				return (((Lm + boat_m >= 0) && (Lc + boat_c >= 0) && Lm + boat_m >= Lc + boat_c || Lm + boat_m == 0) && (Rm - boat_m >= Rc - boat_c|| Rm - boat_m == 0) && !state_tree[Lm +boat_m][Lc +boat_c][!boat_side]);
+		}
+		else
+			return 0;
+	}
+};
+int main()
+{
+	queue<goal> BOAT;
+	cin >> m >> n;
+	BOAT.push(goal(m, m)); state_tree[m][m][left] = 1;
+	while (!BOAT.empty())
+	{
+		goal node = BOAT.front();
+		BOAT.pop();
+		if (node.Lm == 0 && node.Lc == 0)
+		{
+			cout << node.steps << endl;
+			return 0;
+		}
+		if (node.boat_side == left)
+		{
+			for(int i=n;i>=1;i--)
+				for (int j = i; j >= 0; j--)
+				{
+					if (node.judge(i - j, j))
+					{
+						BOAT.push(node.moving(i - j, j));
+					}
+				}
+		}
+		else
+		{
+			for(int i=1;i<=n;i++)
+				for (int j = 0; j <= i; j++)
+				{
+					if (node.judge(i - j, j))
+					{
+						BOAT.push(node.moving(i - j, j));
+					}
+				}
+		}
+		
+	}
+	cout << -1 << endl;
+	return 0;
+}
